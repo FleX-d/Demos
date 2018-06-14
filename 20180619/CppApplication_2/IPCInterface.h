@@ -53,6 +53,7 @@ namespace flexd {
             void sendOperationMsg(const std::string& ID, const std::string& Requester, uint8_t Operation);
             void sendPublishMsg(const std::string& ID, const std::string& Topic, const std::string& Requester, const std::string& PayloadMsg);
             void sendRequestCoreMsg(uint8_t Operation, const std::string& Message, const std::string& AppID);
+            void sendRequestCoreSegmented(uint8_t Segment, uint8_t Count, const std::string& PayloadMsg);
         
 	
 	private:
@@ -61,6 +62,7 @@ namespace flexd {
 	    
 	    virtual void receiveRequestAckMsg(const std::string& ID, uint8_t RequestAck) = 0;
             virtual void receiveBackMsg(const std::string& PayloadMsg) = 0;
+            virtual void receiveBackMsgSegmented(uint8_t Segment, uint8_t Count, const std::string& PayloadMsg) = 0;
             virtual void receiveRequestCoreAckMsg(bool OperationAck, const std::string& Message, const std::string& AppID) = 0;
             
 	    uint32_t getTimestamp();

@@ -46,7 +46,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     
 namespace flexd {
   namespace gen {
-
+  
 	IPCInterface::IPCInterface (flexd::icl::ipc::FleXdEpoll& poller)
 	:IPCConnector(12345, poller),
 	 m_counter(0)
@@ -193,41 +193,143 @@ namespace flexd {
            send(msg);
        }
        
+       void IPCInterface::sendRequestCoreSegmented(uint8_t Segment, uint8_t Count, const std::string& PayloadMsg)
+       {
+	   uint8_t msgtype = 1;
+           uint8_t msgCounter = m_counter;
+           uint32_t timeStamp = getTimestamp();
+           uint32_t from = getMyID();
+           uint32_t to = 11111;
+           int id = 6;
+           
+	   flexd::icl::JsonObj json = {};
+	   
+	    
+	   json.add<int>("/id", id);
+	   json.add<uint8_t>("/payload/Segment", Segment);
+	   json.add<uint8_t>("/payload/Count", Count);
+	   json.add<std::string>("/payload/PayloadMsg", PayloadMsg);
+
+	   std::string tmp = json.getJson();
+           std::vector<uint8_t> payload(tmp.begin(), tmp.end());
+           
+           auto msg = std::make_shared<flexd::icl::ipc::FleXdIPCMsg>(std::move(payload),true);
+           auto addHeader = msg->getAdditionalHeader();
+	   
+                 addHeader->setValue_0(msgtype);
+                 addHeader->setValue_1(msgCounter);
+                 addHeader->setValue_3(timeStamp);
+                 addHeader->setValue_4(from);
+                 addHeader->setValue_5(to);
+           send(msg);
+       }
+       
         void IPCInterface::receiveMsg(flexd::icl::ipc::pSharedFleXdIPCMsg msg)
         {
-	    std::string str(msg->getPayload().begin(),msg->getPayload().end());
-	    flexd::icl::JsonObj json(str);
-	    int id; 
-	    json.get<int>("/id", id);
-	    switch(id)
-	    {
-	       case 4: {
-	          std::string ID;
-                  uint8_t RequestAck;
-	          json.get<std::string>("/payload/ID", ID);
-	          json.get<uint8_t>("/payload/RequestAck", RequestAck);
-                  receiveRequestAckMsg(ID, RequestAck);
-                  break; }
+            try{
+		std::string str(msg->getPayload().begin(),msg->getPayload().end());
+		flexd::icl::JsonObj json(str);
+		if(json.exist("/id"))
+		{
+		    int id; 
+		    json.get<int>("/id", id);
+		    switch(id)
+		    {
+			case 4: {
+			    std::string ID;
+                            uint8_t RequestAck;
+                            
+			    bool tmp = true;
+			    
+			    if(json.exist("/payload/ID")){
+				json.get<std::string>("/payload/ID", ID); 
+			    } else {
+				tmp = false;}
+			    
+			    if(json.exist("/payload/RequestAck")){
+				json.get<uint8_t>("/payload/RequestAck", RequestAck); 
+			    } else {
+				tmp = false;}
+			    
+                            
+			    if(tmp){
+			       receiveRequestAckMsg(ID, RequestAck);}
+			    break; }
 	    
-	       case 5: {
-	          std::string PayloadMsg;
-                  
-	          json.get<std::string>("/payload/PayloadMsg", PayloadMsg);
-                  receiveBackMsg(PayloadMsg);
-                  break; }
+			case 5: {
+			    std::string PayloadMsg;
+                            
+			    bool tmp = true;
+			    
+			    if(json.exist("/payload/PayloadMsg")){
+				json.get<std::string>("/payload/PayloadMsg", PayloadMsg); 
+			    } else {
+				tmp = false;}
+			    
+                            
+			    if(tmp){
+			       receiveBackMsg(PayloadMsg);}
+			    break; }
 	    
-	       case 2: {
-	          bool OperationAck;
-                  std::string Message;
-                  std::string AppID;
-                  
-	          json.get<bool>("/payload/OperationAck", OperationAck);
-	          json.get<std::string>("/payload/Message", Message);
-	          json.get<std::string>("/payload/AppID", AppID);
-                  receiveRequestCoreAckMsg(OperationAck, Message, AppID);
-                  break; }
+			case 6: {
+			    uint8_t Segment;
+                            uint8_t Count;
+                            std::string PayloadMsg;
+                            
+			    bool tmp = true;
+			    
+			    if(json.exist("/payload/Segment")){
+				json.get<uint8_t>("/payload/Segment", Segment); 
+			    } else {
+				tmp = false;}
+			    
+			    if(json.exist("/payload/Count")){
+				json.get<uint8_t>("/payload/Count", Count); 
+			    } else {
+				tmp = false;}
+			    
+			    if(json.exist("/payload/PayloadMsg")){
+				json.get<std::string>("/payload/PayloadMsg", PayloadMsg); 
+			    } else {
+				tmp = false;}
+			    
+                            
+			    if(tmp){
+			       receiveBackMsgSegmented(Segment, Count, PayloadMsg);}
+			    break; }
 	    
-	    }
+			case 2: {
+			    bool OperationAck;
+                            std::string Message;
+                            std::string AppID;
+                            
+			    bool tmp = true;
+			    
+			    if(json.exist("/payload/OperationAck")){
+				json.get<bool>("/payload/OperationAck", OperationAck); 
+			    } else {
+				tmp = false;}
+			    
+			    if(json.exist("/payload/Message")){
+				json.get<std::string>("/payload/Message", Message); 
+			    } else {
+				tmp = false;}
+			    
+			    if(json.exist("/payload/AppID")){
+				json.get<std::string>("/payload/AppID", AppID); 
+			    } else {
+				tmp = false;}
+			    
+                            
+			    if(tmp){
+			       receiveRequestCoreAckMsg(OperationAck, Message, AppID);}
+			    break; }
+	    
+	           }
+	        }
+	   }catch(...){
+		return;
+	   }
         }
         
        
