@@ -19,6 +19,7 @@
 #include "FleXdEpoll.h"
 #include "FleXdEvent.h"
 #include <signal.h>
+#include <unistd.h>
 
 class IPCClient : public flexd::gen::IPCInterface{
     public :
@@ -49,30 +50,51 @@ class IPCClient : public flexd::gen::IPCInterface{
         uint8_t Operation = 0;
         std::string Message = "";
         std::string AppID = "";
+        bool temp = true;
         if(PayloadMsg.empty()){
             std::cout << "Message is empty!"<< std::endl; 
             sendPublishMsg("DockerApp", "backend/out", "DocApp", "Msg is empty!");
         } else 
         {
-            flexd::icl::JsonObj json(PayloadMsg);
             try{
+                flexd::icl::JsonObj json(PayloadMsg);
                 if(json.exist("/Operation")){
-                json.get<uint8_t>("/Operation", Operation);}
+                json.get<uint8_t>("/Operation", Operation);
+                } else {
+                    temp = false;
+                }
                 if(json.exist("/Message")){
-                json.get<std::string>("/Message", Message);}
+                json.get<std::string>("/Message", Message);
+                } else {
+                    temp = false;
+                }
                 if(json.exist("/AppID")){
-                json.get<std::string>("/AppID", AppID);}
+                json.get<std::string>("/AppID", AppID);
+                } else {
+                    temp = false; 
+                }
+                
+                if(!temp){
+                    std::cout << "Message is invalid!"<< std::endl; 
+                    sendPublishMsg("DockerApp", "backend/out", "DocApp", "Msg is invalid!");
+                }
                 
             }catch(...){
                 std::cout << "Message is invalid!"<< std::endl; 
                 sendPublishMsg("DockerApp", "backend/out", "DocApp", "Msg is invalid!");
+                temp = false;
                 return;
             }
         }
         
-	    std::cout << "Receive valid MSG: Operation: " << Operation << " Message: " << Message << " AppID: " << AppID << std::endl; 
+        if(temp){
+            std::cout << "Receive valid MSG: Operation: " << Operation << " Message: " << Message << " AppID: " << AppID << std::endl; 
             sendRequestCoreMsg(Operation, Message, AppID);
             sendPublishMsg("DockerApp", "backend/out", "DocApp", "Receive valid Operation MSG, Sending to Core");
+        } else {
+            std::cout << "Message is invalid!"<< std::endl; 
+            sendPublishMsg("DockerApp", "backend/out", "DocApp", "Msg is invalid!");
+        }
        
     }
     
@@ -81,6 +103,7 @@ class IPCClient : public flexd::gen::IPCInterface{
         std::cout << "ID: " << ID << ", RequestAck: " << (int)RequestAck << std::endl;
         if(counter == 0 && RequestAck == 1)
         {
+            sleep(2);
             std::cout << "Create CLient Success: " << ID << std::endl;
             sendPublishMsg("DockerApp", "backend/out", "DocApp", "Create CLient Success");
             sendSubScribe();
@@ -108,21 +131,19 @@ class IPCClient : public flexd::gen::IPCInterface{
     
     void receiveRequestCoreAckMsg(bool OperationAck, const std::string& Message, const std::string& AppID) 
     {
-        std::cout << "Receive RequestAck Core Msg " <<  std::endl;
-        std::string temp = {};
+        std::cout << "Receive RequestAck Core Msg " << "OperationAck: " << OperationAck << " Message: " << Message << " AppID: " << AppID << std::endl;
+        std::string temp = "Acknowledge form Core: ";
         flexd::icl::JsonObj json= {};
         json.add<bool>("/OperationAck", OperationAck);
         json.add<std::string>("/Message", Message);
         json.add<std::string>("/AppID", AppID);
-        std::cout << "OperationAck: " << OperationAck << " Message: " << Message << " AppID: " << AppID << std::endl;
-        temp = json.getJson();
-        sendPublishMsg("DockerApp", "backend/out", "DocApp", "Acknowledge form Core: ");
+        temp += json.getJson();
         sendPublishMsg("DockerApp", "backend/out", "DocApp", temp);
     }
     
     void receiveBackMsgSegmented(uint8_t segment, uint8_t count, const std::string& PayloadMsg) override
     {
-        std::cout << "Segment: " << (int)segment << " Count: " << (int)count << " PayloadMsg: " << PayloadMsg << std::endl;
+        std::cout << "Receive Segmented Msg -> Segment: " << (int)segment << " Count: " << (int)count << " PayloadMsg: " << PayloadMsg << std::endl;
         sendRequestCoreSegmented(segment, count, PayloadMsg);
     }
 
