@@ -67,3 +67,4 @@ target_link_libraries(${PROJECT_NAME}
     pthread
 )
 
+install(TARGETS ${PROJECT_NAME} DESTINATION bin)
