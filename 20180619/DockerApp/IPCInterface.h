@@ -51,8 +51,6 @@ namespace flexd {
             void sendOperationMsg(const std::string& ID, const std::string& Requester, uint8_t Operation);
             void sendPublishMsg(const std::string& ID, const std::string& Topic, const std::string& Requester, const std::string& PayloadMsg);
             void sendRequestCoreMsg(uint8_t Operation, const std::string& Message, const std::string& AppID);
-            void sendRequestCoreSegmented(uint8_t Segment, uint8_t Count, const std::string& PayloadMsg);
-
 
 	private:
             void send(std::shared_ptr<flexd::icl::ipc::FleXdIPCMsg> Msg);

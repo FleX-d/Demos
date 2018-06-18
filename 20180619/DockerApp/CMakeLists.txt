@@ -38,6 +38,12 @@ if (FLEXD_IPCCOMMON_FOUND)
     message(STATUS "FLEXD_IPCCOMMON inc was found: " ${FLEXD_IPCCOMMON_INCLUDE_DIRS})
 endif (FLEXD_IPCCOMMON_FOUND)
 
+pkg_search_module(FLEXD_INIPARSER REQUIRED iniparser)
+if (FLEXD_INIPARSER_FOUND)
+    message(STATUS "FLEXD_INIPARSER libs was found: " ${FLEXD_INIPARSER_LIBRARIES})
+    message(STATUS "FLEXD_INIPARSER inc was found: " ${FLEXD_INIPARSER_INCLUDE_DIRS})
+endif (FLEXD_INIPARSER_FOUND)
+
 SET(privateHeaders
     IPCInterface.h
 )
@@ -50,13 +56,14 @@ SET(privateSources
 add_executable(${PROJECT_NAME} ${privateSources} ${privateHeaders})
 target_compile_options(${PROJECT_NAME} PUBLIC -std=c++14 -Wall -Wfloat-conversion ${JSON_PARSER_CFLAGS_OTHER})
 target_include_directories(${PROJECT_NAME} PUBLIC inc ${JSON_PARSER_INCLUDE_DIRS})
-target_include_directories(${PROJECT_NAME} PRIVATE inc ${FLEXD_EPOLL_INCLUDE_DIRS} ${FLEXD_CONECTOR_INCLUDE_DIRS} ${FLEXD_IPCCOMMON_INCLUDE_DIRS})
+target_include_directories(${PROJECT_NAME} PRIVATE inc ${FLEXD_EPOLL_INCLUDE_DIRS} ${FLEXD_CONECTOR_INCLUDE_DIRS} ${FLEXD_IPCCOMMON_INCLUDE_DIRS} ${FLEXD_INIPARSER_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME}
     ${JSON_PARSER_LIBRARIES}
     ${FLEXD_LOGGER_LIBRARIES}
     ${FLEXD_EPOLL_LIBRARIES}
     ${FLEXD_CONECTOR_LIBRARIES}
     ${FLEXD_IPCCOMMON_LIBRARIES}
+    ${FLEXD_INIPARSER_LIBRARIES}
     pthread
 )
 

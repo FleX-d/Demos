@@ -188,37 +188,6 @@ namespace flexd {
            send(msg);
        }
 
-       void IPCInterface::sendRequestCoreSegmented(uint8_t Segment, uint8_t Count, const std::string& PayloadMsg)
-       {
-	   uint8_t msgtype = 1;
-           uint8_t msgCounter = m_counter;
-           uint32_t timeStamp = getTimestamp();
-           uint32_t from = getMyID();
-           uint32_t to = 11111;
-           int id = 6;
-
-	   flexd::icl::JsonObj json = {};
-
-
-	   json.add<int>("/id", id);
-	   json.add<uint8_t>("/payload/Segment", Segment);
-	   json.add<uint8_t>("/payload/Count", Count);
-	   json.add<std::string>("/payload/PayloadMsg", PayloadMsg);
-
-	   std::string tmp = json.getJson();
-           std::vector<uint8_t> payload(tmp.begin(), tmp.end());
-
-           auto msg = std::make_shared<flexd::icl::ipc::FleXdIPCMsg>(std::move(payload),true);
-           auto addHeader = msg->getAdditionalHeader();
-
-                 addHeader->setValue_0(msgtype);
-                 addHeader->setValue_1(msgCounter);
-                 addHeader->setValue_3(timeStamp);
-                 addHeader->setValue_4(from);
-                 addHeader->setValue_5(to);
-           send(msg);
-       }
-
         void IPCInterface::receiveMsg(flexd::icl::ipc::pSharedFleXdIPCMsg msg)
         {
             try{
