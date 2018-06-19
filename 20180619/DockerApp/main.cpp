@@ -236,7 +236,7 @@ class IPCClient : public flexd::gen::IPCInterface{
         
     }
 
-    void onConnectPeer(uint32_t peerID) override
+    void onConnectPeer(uint32_t peerID, bool genericPeer)
     {
         createClient();
     }
