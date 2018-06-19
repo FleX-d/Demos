@@ -6,7 +6,7 @@ This demo is example of instaling and running all part of flexd.
 # How install all part
 
 ## Prerequisities:
-    sudo apt-get install pkg-config cmake git libsqlite3-dev
+    sudo apt-get install pkg-config cmake git libsqlite3-dev sqlite3
 
 ## Install
 1. Create folder for project and open it
