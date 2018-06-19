@@ -21,6 +21,7 @@
 #include "Base64.h"
 #include "FleXdIPCCommon.h"
 #include <FleXdEvent.h>
+#include <FleXdLogger.h>
 
 class IPCClient : public flexd::gen::IPCInterface{
     public :
@@ -34,7 +35,7 @@ class IPCClient : public flexd::gen::IPCInterface{
     int qos;
     int keepAlive;
     std::string path;
-    std::string m_segmentBuffer;
+    std::string m_buffer;
     
     IPCClient(flexd::icl::ipc::FleXdEpoll& poller)
     : IPCInterface(poller)
@@ -56,33 +57,33 @@ class IPCClient : public flexd::gen::IPCInterface{
             ini::INIParser::getInstance().getValue<int>("Mqtt:qos", qos);
             ini::INIParser::getInstance().getValue<int>("Mqtt:keepAlive", keepAlive);
             ini::INIParser::getInstance().getValue<std::string>("DownloadFiles:path", path);
-            std::cout << "INIT MQTT: ipAddress: " << ipAddress << " Topic: " << topic << " Direction: " << direction << " cleanSession: " << cleanSession << " port: " << port << " qos: " << qos << " keepAlive: " << keepAlive << std::endl;
-            std::cout << "INIT DownloadFiles path: " << path << std::endl;
+            FLEX_LOG_DEBUG("INIT MQTT: ipAddress: ", ipAddress, " Topic: ", topic, " Direction: ", direction, " cleanSession: ", cleanSession, " port: ", port, " qos: ", qos, " keepAlive: ", keepAlive);
+            FLEX_LOG_DEBUG("INIT DownloadFiles path: ", path);
         } else 
         {
-            std::cout << "!!INIT Fail!!" << std::endl;
+            FLEX_LOG_DEBUG("!!INIT Fail!!");
         }
     }
     
     void createClient(){
-       std::cout << "Send Request for Create Client"<< std::endl;
+       FLEX_LOG_DEBUG("Send Request for Create Client");
        sendCreateClientMsg("DockerApp", "DockerApp", "DocApp", ipAddress, topic, (uint8_t)direction, cleanSession, port, qos, keepAlive);
     }
 
     void sendSubScribe(){
-        std::cout << "Send Request for subscribe"<< std::endl;
+        FLEX_LOG_DEBUG("Send Request for subscribe");
         sendOperationMsg("DockerApp", "DocApp", 0);
     }
 
     void receiveBackMsg(const std::string& PayloadMsg) override
     {
-        std::cout << "Receive MSG from backend: " << PayloadMsg << std::endl;
+        FLEX_LOG_DEBUG("Receive MSG from backend: ", PayloadMsg);
         uint8_t Operation = 0;
         std::string Message = "";
         std::string AppID = "";
         bool temp = true;
         if(PayloadMsg.empty()){
-            std::cout << "Message is empty!"<< std::endl;
+            FLEX_LOG_DEBUG("Message is empty!");
             sendPublishMsg("DockerApp", "backend/out", "DocApp", "Msg is empty!");
         } else
         {
@@ -94,7 +95,7 @@ class IPCClient : public flexd::gen::IPCInterface{
                     temp = false;
                 }
                 if(json.exist("/Message")){
-                json.get<std::string>("/Message", Message);
+                json.get<std::string>("/Message", m_buffer);
                 } else {
                     temp = false;
                 }
@@ -105,12 +106,12 @@ class IPCClient : public flexd::gen::IPCInterface{
                 }
 
                 if(!temp){
-                    std::cout << "Message is invalid!"<< std::endl;
+                    FLEX_LOG_DEBUG("Message is invalid!");
                     sendPublishMsg("DockerApp", "backend/out", "DocApp", "Msg is invalid!");
                 }
 
             }catch(...){
-                std::cout << "Message is invalid!"<< std::endl;
+                FLEX_LOG_DEBUG("Message is invalid!");
                 sendPublishMsg("DockerApp", "backend/out", "DocApp", "Msg is invalid!");
                 temp = false;
                 return;
@@ -124,15 +125,15 @@ class IPCClient : public flexd::gen::IPCInterface{
                 {
                    sendPublishMsg("DockerApp", "backend/out", "DocApp", "Receive valid Message, Sending to Core");
                    sendRequestCoreMsg(Operation, path + AppID ,AppID);
-                   m_segmentBuffer.clear();
+                   m_buffer.clear();
                 }
             } else {
-            std::cout << "Receive valid MSG: Operation: " << Operation << " Message: " << Message << " AppID: " << AppID << std::endl;
-            sendRequestCoreMsg(Operation, Message, AppID);
+            FLEX_LOG_DEBUG("Receive valid MSG: Operation: ", Operation, " Message: ", Message, " AppID: ", AppID);
+            sendRequestCoreMsg(Operation, path + AppID, AppID);
             sendPublishMsg("DockerApp", "backend/out", "DocApp", "Receive valid Operation MSG, Sending to Core");
             }
         } else {
-            std::cout << "Message is invalid!"<< std::endl;
+            FLEX_LOG_DEBUG("Message is invalid!");
             sendPublishMsg("DockerApp", "backend/out", "DocApp", "Msg is invalid!");
         }
 
@@ -140,41 +141,41 @@ class IPCClient : public flexd::gen::IPCInterface{
 
     void receiveRequestAckMsg(const std::string& ID, uint8_t RequestAck) override
     {
-        std::cout << "ID: " << ID << ", RequestAck: " << (int)RequestAck << std::endl;
+        FLEX_LOG_DEBUG("ID: ", ID, ", RequestAck: ", (int)RequestAck);
         if(counter == 0 && RequestAck == 1)
         {
             sleep(2);
-            std::cout << "Create CLient Success: " << ID << std::endl;
+            FLEX_LOG_DEBUG("Create CLient Success: ", ID);
             sendPublishMsg("DockerApp", "backend/out", "DocApp", "Create CLient Success");
             sendSubScribe();
             counter++;
         } else if (counter == 0 && RequestAck == 0){
             sleep(5);
-            std::cout << "Create CLient Fail: " << ID << std::endl;
+            FLEX_LOG_DEBUG("Create CLient Fail: ", ID);
             sendPublishMsg("DockerApp", "backend/out", "DocApp", "Create CLient Fail");
             createClient();
         } else if (counter == 0 && RequestAck == 2) {
-            std::cout << "Create CLient Fail, because is exists: " << ID << std::endl;
+            FLEX_LOG_DEBUG("Create CLient Fail, because is exists: ", ID);
             sendPublishMsg("DockerApp", "backend/out", "DocApp", "Create CLient Fail, already exists!");
             sendSubScribe();
             counter++;
         } else if(counter == 1 && RequestAck == 1){
-            std::cout << "Client Subscribe Success: " << ID << std::endl;
+            FLEX_LOG_DEBUG("Client Subscribe Success: ", ID);
             sendPublishMsg("DockerApp", "backend/out", "DocApp", "Subscribe CLient Success");
             counter++;
         }else if(counter == 1 && RequestAck == 0){
             sleep(5);
-            std::cout << "Client Subscribe Fail: " << ID << std::endl;
+            FLEX_LOG_DEBUG("Client Subscribe Fail: ", ID);
             sendSubScribe();
             //sendPublishMsg("DockerApp", "backend/out", "DocApp", "Subscribe CLient Fail");
         } else {
-            std::cout << "Publish MSG to backend Success: " << ID << std::endl;
+            FLEX_LOG_DEBUG("Publish MSG to backend Success: ", ID);
         }
     }
 
     void receiveRequestCoreAckMsg(bool OperationAck, const std::string& Message, const std::string& AppID)
     {
-        std::cout << "Receive RequestAck Core Msg " << "OperationAck: " << OperationAck << " Message: " << Message << " AppID: " << AppID << std::endl;
+        FLEX_LOG_DEBUG("Receive RequestAck Core Msg ", "OperationAck: ", OperationAck, " Message: ", Message, " AppID: ", AppID);
         std::string temp = "Acknowledge form Core: ";
         flexd::icl::JsonObj json= {};
         json.add<bool>("/OperationAck", OperationAck);
@@ -183,42 +184,12 @@ class IPCClient : public flexd::gen::IPCInterface{
         temp += json.getJson();
         sendPublishMsg("DockerApp", "backend/out", "DocApp", temp);
     }
-
-    void receiveBackMsgSegmented(uint8_t segment, uint8_t count, const std::string& PayloadMsg) override
-    {
-        std::cout << "Receive Segmented Msg -> Segment: " << (int)segment << " Count: " << (int)count << " PayloadMsg: " << PayloadMsg.size() << std::endl;
-
-           m_segmentBuffer += PayloadMsg;
-           if(segment == count){               
-               flexd::icl::JsonObj json(m_segmentBuffer);
-               uint8_t Operation;
-               std::string Message;
-               std::string AppID;
-
-               if(json.exist("/Operation")){
-                   json.get<uint8_t>("Operation", Operation);
-               }
-               if(json.exist("/Message")){
-                   json.get<std::string>("/Message", Message);
-               }
-               if(json.exist("/AppID")){
-                   json.get<std::string>("/AppID", AppID);
-               }
-              
-               if(writeToFile(AppID))
-               {
-                   sendPublishMsg("DockerApp", "backend/out", "DocApp", "Receive valid segmented Message, Sending to Core");
-                   sendRequestCoreMsg(Operation, path + AppID ,AppID);
-                   m_segmentBuffer.clear();
-               }
-           }
-    }
     
     bool writeToFile(std::string AppID){
         base::BinStream b;
         if(flexd::icl::ipc::checkIfFileExist(path))
         {
-            b.setBase64(m_segmentBuffer);
+            b.setBase64(m_buffer);
             if(b.write(path + AppID))
             {
                 return true;
@@ -226,7 +197,7 @@ class IPCClient : public flexd::gen::IPCInterface{
             return false;
         } else {
             flexd::icl::ipc::makeParentDir(path);
-            b.setBase64(m_segmentBuffer);
+            b.setBase64(m_buffer);
             if(b.write(path + AppID))
             {
                 return true;
@@ -247,6 +218,8 @@ class IPCClient : public flexd::gen::IPCInterface{
 int main(int argc, char** argv)
 {
     flexd::icl::ipc::FleXdEpoll poller(10);
+    FLEX_LOG_INIT(poller, "DockerApp");
+    FLEX_LOG_TRACE("DockerApp starting");
     IPCClient client(poller);
     flexd::icl::ipc::FleXdTermEvent e(poller);
     if( e.init()){
@@ -254,4 +227,3 @@ int main(int argc, char** argv)
     }
     return 0;
 }
-

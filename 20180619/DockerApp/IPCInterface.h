@@ -58,7 +58,6 @@ namespace flexd {
 
 	    virtual void receiveRequestAckMsg(const std::string& ID, uint8_t RequestAck) = 0;
             virtual void receiveBackMsg(const std::string& PayloadMsg) = 0;
-            virtual void receiveBackMsgSegmented(uint8_t Segment, uint8_t Count, const std::string& PayloadMsg) = 0;
             virtual void receiveRequestCoreAckMsg(bool OperationAck, const std::string& Message, const std::string& AppID) = 0;
 
 	    uint32_t getTimestamp();
