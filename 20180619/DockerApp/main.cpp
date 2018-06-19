@@ -119,7 +119,7 @@ class IPCClient : public flexd::gen::IPCInterface{
         }
 
         if(temp){
-            if(Operation == 0 && Operation == 6)
+            if(Operation == 0 || Operation == 6)
             {
                 if(writeToFile(AppID))
                 {
