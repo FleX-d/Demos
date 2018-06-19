@@ -11,3 +11,14 @@ All notable changes to this project will be documented in this file.
 
 ### Removed
 - None
+
+
+## [0.0.1] - 2018-06-19
+### Added
+- Simulation application for UART, GPIO, 1W [Jakub Pekar]
+
+### Changed
+- Base CMake, now include the CMake for SimulationApp 
+
+### Removed
+- None
