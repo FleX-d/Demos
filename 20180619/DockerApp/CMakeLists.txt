@@ -45,18 +45,29 @@ if (FLEXD_INIPARSER_FOUND)
 endif (FLEXD_INIPARSER_FOUND)
 
 SET(privateHeaders
-    IPCInterface.h
+    inc/IPCClient.h
+    inc/IPCInterface.h
 )
 
 SET(privateSources
-    IPCInterface.cpp
-    main.cpp
+    src/IPCClient.cpp
+    src/IPCInterface.cpp
+    src/main.cpp
 )
+
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/Resources/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Resources/)
 
 add_executable(${PROJECT_NAME} ${privateSources} ${privateHeaders})
 target_compile_options(${PROJECT_NAME} PUBLIC -std=c++14 -Wall -Wfloat-conversion ${JSON_PARSER_CFLAGS_OTHER})
-target_include_directories(${PROJECT_NAME} PUBLIC inc ${JSON_PARSER_INCLUDE_DIRS})
-target_include_directories(${PROJECT_NAME} PRIVATE inc ${FLEXD_EPOLL_INCLUDE_DIRS} ${FLEXD_CONECTOR_INCLUDE_DIRS} ${FLEXD_IPCCOMMON_INCLUDE_DIRS} ${FLEXD_INIPARSER_INCLUDE_DIRS})
+target_include_directories(${PROJECT_NAME} PUBLIC )
+target_include_directories(${PROJECT_NAME} PRIVATE inc
+    ${JSON_PARSER_INCLUDE_DIRS}
+    ${FLEXD_LOGGER_INCLUDE_DIRS}
+    ${FLEXD_EPOLL_INCLUDE_DIRS}
+    ${FLEXD_CONECTOR_INCLUDE_DIRS}
+    ${FLEXD_IPCCOMMON_INCLUDE_DIRS}
+    ${FLEXD_INIPARSER_INCLUDE_DIRS}
+)
 target_link_libraries(${PROJECT_NAME}
     ${JSON_PARSER_LIBRARIES}
     ${FLEXD_LOGGER_LIBRARIES}
@@ -64,7 +75,6 @@ target_link_libraries(${PROJECT_NAME}
     ${FLEXD_CONECTOR_LIBRARIES}
     ${FLEXD_IPCCOMMON_LIBRARIES}
     ${FLEXD_INIPARSER_LIBRARIES}
-    pthread
 )
 
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)

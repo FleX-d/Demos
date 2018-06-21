@@ -41,30 +41,40 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <FleXdIPCConnector.h>
 #include <string>
 
+#define MCM_JSON_MSG_TYPE "/msgType"
+#define MCM_JSON_MSG_COUNTER "/msgCounter"
+#define MCM_JSON_PAYLOAD_CRC "/payloadCRC"
+#define MCM_JSON_TIME_STAMP "/timeStamp"
+#define MCM_JSON_FROM "/from"
+#define MCM_JSON_TO "/to"
+#define MCM_JSON_PAYLOAD "/payload"
+
 namespace flexd {
-   namespace gen {
-    class IPCInterface : public flexd::icl::ipc::IPCConnector {
-	public:
-	    IPCInterface (flexd::icl::ipc::FleXdEpoll& poller);
+    namespace gen {
+
+        class IPCInterface : public flexd::icl::ipc::IPCConnector {
+        public:
+            IPCInterface (flexd::icl::ipc::FleXdEpoll& poller);
             virtual ~IPCInterface();
-	    void sendCreateClientMsg(const std::string& ID, const std::string& ExternID, const std::string& Requester, const std::string& IPAddress, const std::string& Topic, uint8_t Direction, bool CleanSession, int Port, int QOS, int KeepAlive);
-            void sendOperationMsg(const std::string& ID, const std::string& Requester, uint8_t Operation);
-            void sendPublishMsg(const std::string& ID, const std::string& Topic, const std::string& Requester, const std::string& PayloadMsg);
+            void sendCreateClientMsg(uint32_t ID, const std::string& ExternID, const std::string& Requester, const std::string& IPAddress, const std::string& Topic, uint8_t Direction, bool CleanSession, int Port, int QOS, int KeepAlive);
+            void sendOperationMsg(uint32_t ID, const std::string& Requester, uint8_t Operation);
+            void sendPublishMsg(uint32_t ID, const std::string& Topic, const std::string& Requester, const std::string& PayloadMsg);
             void sendRequestCoreMsg(uint8_t Operation, const std::string& Message, const std::string& AppID);
 
-	private:
-            void send(std::shared_ptr<flexd::icl::ipc::FleXdIPCMsg> Msg);
+        private:
+            void send(std::shared_ptr<flexd::icl::ipc::FleXdIPCMsg> Msg, uint32_t peerID);
+            std::shared_ptr<flexd::icl::ipc::FleXdIPCMsg> msgWrap(const std::string& payload);
+            std::string msgUnwrap(const std::shared_ptr<flexd::icl::ipc::FleXdIPCMsg>& msg);
+            uint32_t getTimestamp();
             virtual void receiveMsg(flexd::icl::ipc::pSharedFleXdIPCMsg Msg) override;
-
-	    virtual void receiveRequestAckMsg(const std::string& ID, uint8_t RequestAck) = 0;
+            virtual void receiveRequestAckMsg(uint32_t ID, uint8_t RequestAck) = 0;
             virtual void receiveBackMsg(const std::string& PayloadMsg) = 0;
             virtual void receiveRequestCoreAckMsg(bool OperationAck, const std::string& Message, const std::string& AppID) = 0;
 
-	    uint32_t getTimestamp();
-	private:
-	    uint8_t m_counter;
-    };
-  }
+        private:
+            uint8_t m_counter;
+        };
 
+    }
 }
 #endif //IPCINTERFACE_H
