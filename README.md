@@ -1,16 +1,16 @@
 # FleX-d demo
 
-FleX-d is flexibile multiplaform minimal distro for all architekture
-This demo is example of instaling and running all part of flexd. 
+FleX-d is flexibile multiplaform minimal distro for every architecture.
+This demo is example of installing and running all part of flexd. 
 
-# How install all part
+# How to install all part
 
 ## Prerequisities:
     sudo apt-get install pkg-config cmake git libsqlite3-dev sqlite3
 
 ## Install
 1. Create folder for project and open it
-2. Download repositary of libs and install in this order
+2. Download repository of libs and install in following order
 
 ### Mosquitto
 
@@ -25,11 +25,11 @@ Mosquitto library
     sudo make install
     sudo ldconfig
 
-bug with cmakelist in folder man - have to add .xml prefix to all file at cmakelist
+There is a bug in the CMakeList in the folder man - required to add .xml prefix to all files in cmakelist
 
 ### Nlohman jsonparser (optional)
 
-Library for parse Json
+Library for parsing Json
 
     git clone https://github.com/nlohmann/json.git
     cd json
@@ -42,7 +42,7 @@ Library for parse Json
 
 ### ICL Internal comunication layer 
 
-Internal communication layer provide communication between aplications via unix domain sokets 
+Internal communication layer provides communication among aplications via unix domain sokets 
 and contains tools for working with Json data, encode/decode file to Base64
 
     git clone https://github.com/FleX-d/ICL.git
@@ -90,7 +90,7 @@ Log & Trace and debug tools for applications in FleXd project.
 
 Remote Servise Manager contains:
 Mosquitto client facade based on Mosquitto library https://github.com/eclipse/mosquitto
-Mosquitto Comunication Manager  - is aplication witch is using Mosquitto Client facade for manage multiple clients and also using ICL layer to communicate with other aplications
+Mosquitto Comunication Manager - it is an aplication using Mosquitto Client facade for managing multiple clients and also using ICL layer to communicate with other aplications
 
     git clone https://github.com/FleX-d/RSM.git
     cd RSM
@@ -106,8 +106,8 @@ Mosquitto Comunication Manager  - is aplication witch is using Mosquitto Client 
 
 ### CORE
 
-Coreapp is base of FleX-d, database store records of all aplications and commands for this aplications.
-Coreapp can start aplication or container.
+Coreapp is base of FleX-d, database stores records of all aplications and commands for this aplications.
+Coreapp can start an aplication or a container.
 
 *Download and compile CoreApp 
 
@@ -121,7 +121,7 @@ Coreapp can start aplication or container.
 
     Option to Enable tests: cmake -DENABLE_TESTS=ON ..
 
-*Run script initDB.sh to prepare database
+*Run script initDB.sh to prepare the database
 
     cd Core/apps/CoreApp/tool/initDB.sh
     ./initDB.sh
@@ -130,10 +130,10 @@ Coreapp can start aplication or container.
 
     cp Core/apps/CoreApp/tool/CoreAppDb.db build/apps/CoreApp/CoreAppDb.db
 
-For adding you example you must edit database file. We use sqlitebroser for this. Add record with appName appVer and with command for terminal 
-example: echo install colum; echo command separated with semicolon; echo added in one colum
-Coreapp execute this command when recive message with right name and operation
-Now you are ready lunch CoreApp and run docker container or other aplication
+For adding example it is required to edit the database file, e.g. use Sqlitebrowser for editing. It is required to add record with appName appVer and with a command for terminal. 
+Example: echo install colum; echo command separated with semicolon; echo added in one colum
+Coreapp executes this command when recives message with right name and operation.
+Now the CoreApp is ready to launch and run docker container or other aplication.
 
 
 # DEMO
@@ -166,7 +166,7 @@ Now you are ready lunch CoreApp and run docker container or other aplication
 
 ## Use command to send message from another terminal
 
-Operation can be: 1-install, 2-uninstall, 3-start, 4-stop, 5-freeze, 6-unfreeze, 7-update, 8-255 is unused (set als invalid) retun false operation result
+Operation can be: 1-install, 2-uninstall, 3-start, 4-stop, 5-freeze, 6-unfreeze, 7-update, 8-255 is unused (set as invalid) and retun false operation result
 
     mosquitto_pub -t backend/in -m '{"AppID":"*Your App Name*","Message":"*Binary dif for install at base64*","Operation": 1-255 }'
 
