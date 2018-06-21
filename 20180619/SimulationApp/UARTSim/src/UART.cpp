@@ -26,40 +26,57 @@
  */
 
 /*
- * File:   IPCInterface.cpp
+ * File:   UART.cpp
  * Author: Jakub Pekar
  */
-#ifndef IPCINTERFACE_H
-#define IPCINTERFACE_H
-
-#include <FleXdEpoll.h>
-#include <FleXdIPCMsg.h>
-#include "FleXdIPCConnector.h"
+#include "IPCInterface.h"
+#include "FleXdEpoll.h"
+#include "FleXdTimer.h"
+#include "FleXdLogger.h"
 
 namespace flexd{
-    namespace bus{
-
-        class IPCInterface : public flexd::icl::ipc::IPCConnector{
+    namespace bus{ 
+        class UARTSim : public IPCInterface{
         public:
-            IPCInterface(uint32_t ipdID, flexd::icl::ipc::FleXdEpoll& poller);
-            virtual ~IPCInterface() = default;
-    
-            void sendDataToMCM(std::vector<uint8_t> data);
-    
-            void receiveMsg ( flexd::icl::ipc::pSharedFleXdIPCMsg msg ) override;
-            void onConnectPeer ( uint32_t peerID, bool genericPeer ) override;
-            virtual void onTimer() = 0;
+            UARTSim(flexd::icl::ipc::FleXdEpoll& poller) 
+            :IPCInterface(100, poller),
+            m_periodTime(3),
+            m_UARTTimer(poller, m_periodTime, 0, true, [this](void){ this->onTimer(); })
+            {   
+                FLEX_LOG_INIT(poller,"UARTSimulator");
 
-            void sendCreateClientMsg ( const std::string& ID, const std::string& ExternID, const std::string& Requester, const std::string& IPAddress, const std::string& Topic, uint8_t Direction, bool CleanSession, int Port, int QOS, int KeepAlive );
-            void sendPublishMsg ( const std::string& ID, const std::string& Topic, const std::string& Requester, const std::string& PayloadMsg );
-            void send ( std::shared_ptr<flexd::icl::ipc::FleXdIPCMsg> Msg );
+                if(m_UARTTimer.start())
+                {
+                    FLEX_LOG_INFO("-> FleXdTimer.start() successful");
+                } else {
+                    FLEX_LOG_INFO("-> FleXdTimer.start() failed");
+                }
+                sendCreateClientMsg("UART","UART","UARTSim","127.0.0.1", "backend/in", 2, true, 1883, 0, 60);
+                FLEX_LOG_INFO("-> Constructor was successful perform");
+            }
+            ~UARTSim(){ m_UARTTimer.stop(); }
+            UARTSim(const UARTSim&) = delete;
+    
+            void onTimer() override{
+        
+                srand(time(NULL));
+                int number = std::rand() % 35;
+                std::string message = "Data from UART: temperature = " + std::to_string(number) + "°C"; 
+                std::vector<uint8_t> data(message.begin(),message.end());
+    
+                FLEX_LOG_TRACE("-> Sending data to MCM: ", message );
+                sendPublishMsg("UART","backend/in","UARTSim",message);
+            }
+
         private:
-            uint32_t getTimestamp();
-        private:
-            uint8_t m_counter;
+            uint16_t m_periodTime;
+            flexd::icl::ipc::FleXdTimer m_UARTTimer;
         };
-
     } //namespace bus
 } //namespace flexd
 
-#endif // IPCINTERFACE_H 
+int main(int argc, char** argv) {
+    flexd::icl::ipc::FleXdEpoll poller(10);
+    flexd::bus::UARTSim uartsimulator(poller);
+    poller.loop();
+}

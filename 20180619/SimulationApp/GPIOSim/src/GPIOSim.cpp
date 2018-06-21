@@ -37,7 +37,7 @@
  #include <iostream>
  
  
-class GPIOSim: public IPCInterface{
+class GPIOSim: public flexd::bus::IPCInterface{
 public:
     void onTimer() override{
         srand(time(NULL));
@@ -45,10 +45,11 @@ public:
         std::string message = "Data from GPIO: PinState = " + std::to_string(number); 
         std::vector<uint8_t> data(message.begin(),message.end());
         FLEX_LOG_TRACE(" -> Sending data to MCM: ", message );
+        sendPublishMsg("GPIO","backend/in","GPIOSim",message);
     }
     
     GPIOSim(flexd::icl::ipc::FleXdEpoll& poller)
-    :IPCInterface(100, poller),
+    :IPCInterface(102, poller),
      m_periodTime(5),
      m_GPIOTimer(poller, m_periodTime, 0, true, [this](void){ this->onTimer(); })
     {
@@ -59,6 +60,7 @@ public:
         } else {
             FLEX_LOG_INFO(" -> FleXdTimer.start() failed");
         }
+        sendCreateClientMsg("GPIO","GPIO","GPIOSim","127.0.0.1", "backend/in", 2, true, 1883, 0, 60);
     }
     
     ~GPIOSim(){}

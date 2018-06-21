@@ -9,17 +9,7 @@ message(STATUS "***")
 message(STATUS "*flexdSimIPCPublicInc: " ${flexdSimIPCPublicInc})
 message(STATUS "*flexdSimIPCLib: " ${flexdSimIPCLib})
 
-set(publicHeaders
-)
-
-set(privateHeaders
-)
-
-set(privateSources
-    src/GPIOSim.cpp
-)
-
-add_executable(${PROJECT_NAME} ${privateSources} ${privateHeaders} ${publicHeaders})
+add_executable(${PROJECT_NAME} src/GPIOSim.cpp)
 
 target_include_directories(${PROJECT_NAME} PUBLIC inc/public)
 target_include_directories(${PROJECT_NAME} PRIVATE inc/

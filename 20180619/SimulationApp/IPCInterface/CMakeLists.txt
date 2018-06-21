@@ -6,7 +6,14 @@ message(STATUS "***" )
 message(STATUS "* " ${PROJECT_NAME})
 message(STATUS "***")
 
-find_package(PkgConfig)
+include(FindPkgConfig)
+find_package(PkgConfig REQUIRED)
+pkg_search_module(JSON_PARSER REQUIRED jsonParser)
+if (JSON_PARSER_FOUND)
+    message(STATUS "JSON_PARSER libs was found: " ${JSON_PARSER_LIBRARIES})
+    message(STATUS "JSON_PARSER inc was found: " ${JSON_PARSER_INCLUDE_DIRS})
+endif (JSON_PARSER_FOUND)
+
 pkg_check_modules(FLEXDIPCCONNECTOR REQUIRED fleXdIPCConnector)
 pkg_check_modules(FLEXDEPOLL REQUIRED fleXdEpoll)
 pkg_check_modules(FLEXDIPCCOMMON REQUIRED fleXdIPCCommon)
@@ -24,11 +31,11 @@ set(publicHeaders
 )
 
 set(privateHeaders
- inc/IPCInterface.h
+    inc/IPCInterface.h
 )
 
 set(privateSources
-src/IPCInterface.cpp
+    src/IPCInterface.cpp
 )
 
 add_library(${PROJECT_NAME} SHARED ${privateSources})
@@ -40,7 +47,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
     
 configure_file(${PROJECT_NAME}.pc.in ${PROJECT_NAME}.pc @ONLY)
 
-target_include_directories(${PROJECT_NAME} PUBLIC inc/public)
+target_include_directories(${PROJECT_NAME} PUBLIC inc/public ${JSON_PARSER_INCLUDE_DIRS})
 target_include_directories(${PROJECT_NAME} PRIVATE inc/
     ${FLEXDIPCCONNECTOR_INCLUDE_DIRS}
     ${FLEXDEPOLL_INCLUDE_DIRS}
@@ -51,14 +58,13 @@ target_include_directories(${PROJECT_NAME} PRIVATE inc/
 target_compile_options(${PROJECT_NAME} PUBLIC -std=c++14 -Wall -Wfloat-conversion)
 
 target_link_libraries(${PROJECT_NAME}
+    ${JSON_PARSER_LIBRARIES}
     ${FLEXDIPCCONNECTOR_LIBRARIES}
     ${FLEXDEPOLL_LIBRARIES}
     ${FLEXDIPCCOMMON_LIBRARIES}
     ${FLEXDLOGGERCLIENT_LIBRARIES}
 )
-#install(TARGETS ${PROJECT_NAME}
-#    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-#    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
 install(FILES ${CMAKE_BINARY_DIR}/libs/flexdSimIPC/${PROJECT_NAME}.pc
     DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pkgconfig) 
     
