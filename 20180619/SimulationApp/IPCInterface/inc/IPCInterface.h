@@ -36,6 +36,15 @@
 #include <FleXdIPCMsg.h>
 #include "FleXdIPCConnector.h"
 
+
+#define MCM_JSON_MSG_TYPE "/msgType"
+#define MCM_JSON_MSG_COUNTER "/msgCounter"
+#define MCM_JSON_PAYLOAD_CRC "/payloadCRC"
+#define MCM_JSON_TIME_STAMP "/timeStamp"
+#define MCM_JSON_FROM "/from"
+#define MCM_JSON_TO "/to"
+#define MCM_JSON_PAYLOAD "/payload"
+
 namespace flexd{
     namespace bus{
 
@@ -43,18 +52,52 @@ namespace flexd{
         public:
             IPCInterface(uint32_t ipdID, flexd::icl::ipc::FleXdEpoll& poller);
             virtual ~IPCInterface() = default;
-    
-            void sendDataToMCM(std::vector<uint8_t> data);
-    
+            /**
+             * Override function from base class IPCConnector, that returned received message as a parameter of function.
+             * @param msg - received message from IPC
+             */
             void receiveMsg ( flexd::icl::ipc::pSharedFleXdIPCMsg msg ) override;
+            /**
+             * Override function from base class IPCConnector, that is called after peer connecting 
+             * @param peerID - identifier of connected peer
+             * @param genericPeer - generic interface setting (true - generic interface enable)
+             */
             void onConnectPeer ( uint32_t peerID, bool genericPeer ) override;
+             /**
+             * Function for initialization the client on the Mosquito Communication Manager (PeerID = 00000)
+             * @param ID - identifier of connected peer
+             * @param ExternID -
+             * @param Requester -
+             * @param IPAddress -
+             * @param Topic - 
+             * @param Direction - 
+             * @param CleanSession - 
+             * @param Port - 
+             * @param QOS - 
+             * @param KeepAlive - 
+             */
+            void sendCreateClientMsg ( uint32_t ID, const std::string& ExternID, const std::string& Requester, const std::string& IPAddress, const std::string& Topic, uint8_t Direction, bool CleanSession, int Port, int QOS, int KeepAlive );
+             /**
+             * Function for publishing message ti the MCM
+             * @param ID - identifier of connected peer
+             * @param Topic - 
+             * @param Requester -
+             * @param PayloadMsg -
+             */
+            void sendPublishMsg ( uint32_t ID, const std::string& Topic, const std::string& Requester, const std::string& PayloadMsg );
+            /**
+             * Function implement the send  function from base class. 
+             * @param msg - sent message to the IPC
+             */
+            void send ( std::shared_ptr<flexd::icl::ipc::FleXdIPCMsg> msg );
+            /**
+             * Pure virtual function for timer, the override function will be called after the timer overflows
+             */
             virtual void onTimer() = 0;
-
-            void sendCreateClientMsg ( const std::string& ID, const std::string& ExternID, const std::string& Requester, const std::string& IPAddress, const std::string& Topic, uint8_t Direction, bool CleanSession, int Port, int QOS, int KeepAlive );
-            void sendPublishMsg ( const std::string& ID, const std::string& Topic, const std::string& Requester, const std::string& PayloadMsg );
-            void send ( std::shared_ptr<flexd::icl::ipc::FleXdIPCMsg> Msg );
         private:
             uint32_t getTimestamp();
+            std::shared_ptr<flexd::icl::ipc::FleXdIPCMsg> msgWrap(const std::string& payload);
+            std::string msgUnwrap(const std::shared_ptr<flexd::icl::ipc::FleXdIPCMsg>& msg);
         private:
             uint8_t m_counter;
         };

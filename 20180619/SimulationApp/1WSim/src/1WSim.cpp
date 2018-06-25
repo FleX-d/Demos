@@ -48,7 +48,7 @@ namespace flexd{
                 std::string message = "Data from One Wired: Voltage = " + std::to_string(number % 6) + "." +std::to_string(number % 10); 
                 std::vector<uint8_t> data(message.begin(),message.end());
                 FLEX_LOG_TRACE("-> Sending data to MCM: ", message );
-                sendPublishMsg("OneW","backend/in","OneWired",message);
+                sendPublishMsg(101,"backend/in","OneWired",message);
             }
     
             OneWSim(flexd::icl::ipc::FleXdEpoll& poller)
@@ -63,7 +63,7 @@ namespace flexd{
                 } else {
                     FLEX_LOG_INFO("-> FleXdTimer.start() failed");
                 }
-                sendCreateClientMsg("OneW","OneW","OneWired","127.0.0.1", "backend/in", 2, true, 1883, 0, 60);
+                sendCreateClientMsg(101,"OneW","OneWired","127.0.0.1", "backend/in", 2, true, 1883, 0, 60);
             }
     
             ~OneWSim(){}

@@ -40,7 +40,7 @@ namespace flexd{
         public:
             UARTSim(flexd::icl::ipc::FleXdEpoll& poller) 
             :IPCInterface(100, poller),
-            m_periodTime(3),
+            m_periodTime(2),
             m_UARTTimer(poller, m_periodTime, 0, true, [this](void){ this->onTimer(); })
             {   
                 FLEX_LOG_INIT(poller,"UARTSimulator");
@@ -51,7 +51,7 @@ namespace flexd{
                 } else {
                     FLEX_LOG_INFO("-> FleXdTimer.start() failed");
                 }
-                sendCreateClientMsg("UART","UART","UARTSim","127.0.0.1", "backend/in", 2, true, 1883, 0, 60);
+                sendCreateClientMsg(100,"UART","UARTSim","127.0.0.1", "backend/in", 2, true, 1883, 0, 60);
                 FLEX_LOG_INFO("-> Constructor was successful perform");
             }
             ~UARTSim(){ m_UARTTimer.stop(); }
@@ -65,7 +65,7 @@ namespace flexd{
                 std::vector<uint8_t> data(message.begin(),message.end());
     
                 FLEX_LOG_TRACE("-> Sending data to MCM: ", message );
-                sendPublishMsg("UART","backend/in","UARTSim",message);
+                sendPublishMsg(100,"backend/in","UARTSim",message);
             }
 
         private:

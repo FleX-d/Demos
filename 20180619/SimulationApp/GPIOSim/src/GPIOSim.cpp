@@ -45,7 +45,7 @@ public:
         std::string message = "Data from GPIO: PinState = " + std::to_string(number); 
         std::vector<uint8_t> data(message.begin(),message.end());
         FLEX_LOG_TRACE(" -> Sending data to MCM: ", message );
-        sendPublishMsg("GPIO","backend/in","GPIOSim",message);
+        sendPublishMsg(102,"backend/in","GPIOSim",message);
     }
     
     GPIOSim(flexd::icl::ipc::FleXdEpoll& poller)
@@ -60,7 +60,7 @@ public:
         } else {
             FLEX_LOG_INFO(" -> FleXdTimer.start() failed");
         }
-        sendCreateClientMsg("GPIO","GPIO","GPIOSim","127.0.0.1", "backend/in", 2, true, 1883, 0, 60);
+        sendCreateClientMsg(102,"GPIO","GPIOSim","127.0.0.1", "backend/in", 2, true, 1883, 0, 60);
     }
     
     ~GPIOSim(){}

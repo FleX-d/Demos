@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0)
-project(GPIOSim VERSION "0.1.1")
+project(GPIOSim VERSION "0.0.1")
 set(PROJECT_DESCRIPTION "FleX-d Simulator of GPIO")
 
 message(STATUS "***" )
@@ -27,11 +27,6 @@ target_link_libraries(${PROJECT_NAME}
     ${FLEXDIPCCOMMON_LIBRARIES}
     ${FLEXDLOGGERCLIENT_LIBRARIES}
 )
-
-set_target_properties(${PROJECT_NAME} PROPERTIES
-    VERSION ${PROJECT_VERSION}
-    SOVERSION 1
-    PUBLIC_HEADER "${publicHeaders}")
     
 install(TARGETS ${PROJECT_NAME}
     DESTINATION ${CMAKE_BINARY_DIR})

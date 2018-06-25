@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0)
-project(flexdSimIPC VERSION "0.1.1")
+project(flexdSimIPC VERSION "0.0.1")
 set(PROJECT_DESCRIPTION "FleX-d Simulator IPC")
 
 message(STATUS "***" )
@@ -39,11 +39,6 @@ set(privateSources
 )
 
 add_library(${PROJECT_NAME} SHARED ${privateSources})
-
-set_target_properties(${PROJECT_NAME} PROPERTIES
-    VERSION ${PROJECT_VERSION}
-    SOVERSION 1
-    PUBLIC_HEADER "${publicHeaders}")
     
 configure_file(${PROJECT_NAME}.pc.in ${PROJECT_NAME}.pc @ONLY)
 

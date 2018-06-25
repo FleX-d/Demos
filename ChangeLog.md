@@ -2,6 +2,17 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
+## [0.0.1] - 2018-06-25
+### Added
+- None
+
+### Changed
+- Finishing with implementation of generic interface[Jakub Pekar]
+
+### Removed
+- Empty directories /inc [Jakub Pekar]
+
+## [Unreleased]
 ## [0.0.1] - 2018-06-21
 ### Added
 - None
