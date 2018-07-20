@@ -30,20 +30,22 @@
  * Author: Jakub Pekar
  */
 #include "IPCInterface.h"
+#include "GenericClient.h"
 #include "FleXdEpoll.h"
 #include "FleXdTimer.h"
 #include "FleXdLogger.h"
 
 namespace flexd{
     namespace bus{ 
-        class UARTSim : public IPCInterface{
+        class UARTSim : public flexd::gen::IPCInterface{
         public:
             UARTSim(flexd::icl::ipc::FleXdEpoll& poller) 
-            :IPCInterface(100, poller),
-            m_periodTime(2),
+            :IPCInterface(00100, poller),
+            m_periodTime(5),
             m_UARTTimer(poller, m_periodTime, 0, true, [this](void){ this->onTimer(); })
             {   
                 FLEX_LOG_INIT(poller,"UARTSimulator");
+                
 
                 if(m_UARTTimer.start())
                 {
@@ -51,8 +53,9 @@ namespace flexd{
                 } else {
                     FLEX_LOG_INFO("-> FleXdTimer.start() failed");
                 }
-                sendCreateClientMsg(100,"UART","UARTSim","127.0.0.1", "backend/in", 2, true, 1883, 0, 60);
-                FLEX_LOG_INFO("-> Constructor was successful perform");
+                flexd::gen::GenericClient::Header head = {0,0,0,0, getMyID(), 00000};
+                auto header = std::make_shared<flexd::gen::GenericClient::Header>(head);
+                sendCreateClientMsg(header, 00100,"UART","UARTSim","127.0.0.1", "backend/in", 2, true, 1883, 0, 60);
             }
             ~UARTSim(){ m_UARTTimer.stop(); }
             UARTSim(const UARTSim&) = delete;
@@ -65,7 +68,15 @@ namespace flexd{
                 std::vector<uint8_t> data(message.begin(),message.end());
     
                 FLEX_LOG_TRACE("-> Sending data to MCM: ", message );
-                sendPublishMsg(100,"backend/in","UARTSim",message);
+                flexd::gen::GenericClient::Header head = {0,0,0,0, getMyID(), 00000};
+                auto header = std::make_shared<flexd::gen::GenericClient::Header>(head);
+                sendPublishMsg(header, getMyID(), "backend/in", "UARTSim", message);
+            }
+            void receiveRequestAckMsg(std::shared_ptr<flexd::gen::GenericClient::Header> header, uint32_t ID, uint8_t RequestAck) override{
+                
+            }
+            void receiveBackMsg(std::shared_ptr<flexd::gen::GenericClient::Header> header, uint32_t ID, const std::string& PayloadMsg) override{
+                
             }
 
         private:

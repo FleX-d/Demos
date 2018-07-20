@@ -35,38 +35,27 @@
 #include <JsonObj.h>
 #include <ctime>
 #include <chrono>
-
-
+ 
 namespace flexd{
-    namespace bus{
+    namespace gen{
         IPCInterface::IPCInterface(uint32_t ipcID, flexd::icl::ipc::FleXdEpoll& poller)
         :IPCConnector(ipcID, poller, true),
-        m_counter(0){
+         GenericClient()
+        {
             addPeer (00000);
         }
         
-        void IPCInterface::onConnectPeer(uint32_t peerID, bool genericPeer){
-
-        }
-        void IPCInterface::receiveMsg(flexd::icl::ipc::pSharedFleXdIPCMsg msg){
-            flexd::icl::JsonObj json(msgUnwrap(msg));
-        }
-
-        uint32_t IPCInterface::getTimestamp(){
-            std::chrono::time_point<std::chrono::system_clock> p;
-            p = std::chrono::system_clock::now();
-            std::time_t time = std::chrono::duration_cast<std::chrono::milliseconds> ( p.time_since_epoch() ).count();
-            return static_cast<uint32_t> ( time );
-        }
-
-        void IPCInterface::sendCreateClientMsg(uint32_t ID, const std::string& ExternID, 
+        void IPCInterface::sendCreateClientMsg(std::shared_ptr<GenericClient::Header> header,
+                                               uint32_t ID, const std::string& ExternID, 
                                                const std::string& Requester, const std::string& IPAddress,
                                                const std::string& Topic, uint8_t Direction,
                                                bool CleanSession, int Port,
                                                int QOS, int KeepAlive){
+            
+            int id = 1;
             flexd::icl::JsonObj json;
 
-            json.add<int> ( "/id", 1 );
+            json.add<int> ( "/id", id );
             json.add<uint32_t> ( "/payload/ID", ID );
             json.add<std::string> ( "/payload/ExternID", ExternID );
             json.add<std::string> ( "/payload/Requester", Requester );
@@ -77,56 +66,106 @@ namespace flexd{
             json.add<int> ( "/payload/Port", Port );
             json.add<int> ( "/payload/QOS", QOS );
             json.add<int> ( "/payload/KeepAlive", KeepAlive );
-
-            send ( msgWrap(json.getJson()) );
+            send(msgWrap(header, json.getJson()), header->to);
         }
         
-        void IPCInterface::sendPublishMsg(uint32_t ID, const std::string& Topic, const std::string& Requester, const std::string& PayloadMsg ){
+        void IPCInterface::sendOperationMsg(std::shared_ptr<GenericClient::Header> header, uint32_t ID, const std::string& Requester, uint8_t Operation){
+            int id = 2;
+           
             flexd::icl::JsonObj json;
-
-            json.add<int> ( "/id", 3 );
-            json.add<uint32_t> ( "/payload/ID", ID );
-            json.add<std::string> ( "/payload/Topic", Topic );
-            json.add<std::string> ( "/payload/Requester", Requester );
-            json.add<std::string> ( "/payload/PayloadMsg", PayloadMsg );
-
-            send ( msgWrap(json.getJson()) );
+	    
+            json.add<int>("/id", id);
+            json.add<uint32_t>("/payload/ID", ID);
+            json.add<std::string>("/payload/Requester", Requester);
+            json.add<uint8_t>("/payload/Operation", Operation);
+            send(msgWrap(header, json.getJson()), header->to);
         }
         
-        std::shared_ptr<flexd::icl::ipc::FleXdIPCMsg> IPCInterface::msgWrap(const std::string& payload) {
-            flexd::icl::JsonObj json;
-
-            json.add<uint8_t>(MCM_JSON_MSG_TYPE, 1);
-            json.add<uint8_t>(MCM_JSON_MSG_COUNTER, m_counter);
-            json.add<uint16_t>(MCM_JSON_PAYLOAD_CRC, flexd::icl::ipc::FleXdIPCMsg::calcCRC16(&payload[0] , payload.size()));
-            json.add<uint32_t>(MCM_JSON_TIME_STAMP, getTimestamp());
-            json.add<uint32_t>(MCM_JSON_FROM, getMyID());
-            json.add<uint32_t>(MCM_JSON_TO, 00000);
-            json.add<std::string>(MCM_JSON_PAYLOAD, payload);
-
-            std::string strJson(json.getJson());
-            std::vector<uint8_t> msgPayload(strJson.begin(), strJson.end());
-            return std::make_shared<flexd::icl::ipc::FleXdIPCMsg>(IPC_MSG_HEADER_PARAM_TYPE_MSG_TYPE, IPC_MSG_HEADER_IN_PAYLOAD_FLAG, std::move(msgPayload));
-        }
-
-        std::string IPCInterface::msgUnwrap(const std::shared_ptr<flexd::icl::ipc::FleXdIPCMsg>& msg) {
-            //TODO returns only payload, should return whole message
-            if(msg->getHeaderParamType() == IPC_MSG_HEADER_PARAM_TYPE_MSG_TYPE && msg->getHeaderParam() == IPC_MSG_HEADER_IN_PAYLOAD_FLAG) {
-                std::string strJson(msg->getPayload().begin(), msg->getPayload().end());
-                flexd::icl::JsonObj json(strJson);
-                std::string payload;
-                if(json.exist(MCM_JSON_PAYLOAD)) {
-                    json.get<std::string>(MCM_JSON_PAYLOAD, payload);
-                }
-                return payload;
-            }
-            return std::string(msg->getPayload().begin(), msg->getPayload().end());
-        }
-        
-        void IPCInterface::send ( std::shared_ptr<flexd::icl::ipc::FleXdIPCMsg> Msg )
+        void IPCInterface::sendPublishMsg(std::shared_ptr<GenericClient::Header> header, uint32_t ID, const std::string& Topic, const std::string& Requester, const std::string& PayloadMsg)
         {
-            if(sendMsg(Msg, 00000)){
-            m_counter++;
+       
+            int id = 3;
+           
+            flexd::icl::JsonObj json = {};
+                
+            json.add<int>("/id", id);
+            json.add<uint32_t>("/payload/ID", ID);
+            json.add<std::string>("/payload/Topic", Topic);
+            json.add<std::string>("/payload/Requester", Requester);
+            json.add<std::string>("/payload/PayloadMsg", PayloadMsg);
+            send(msgWrap(header, json.getJson()), header->to);
+        }
+        
+        void IPCInterface::onConnectPeer(uint32_t peerID, bool genericPeer){
+
+        }
+        
+        void IPCInterface::receiveMsg(flexd::icl::ipc::pSharedFleXdIPCMsg msg)
+        {
+            try{
+                if(!msg) {
+                    return;
+                }
+                
+                flexd::icl::JsonObj json(msgUnwrap(msg));
+                if(json.exist("/id"))
+                {
+                    int id; 
+                    json.get<int>("/id", id);
+                    switch(id)
+                    {
+                        case 4: {
+                            uint32_t ID;
+                            uint8_t RequestAck;
+                            
+                            bool tmp = true;
+			    
+                            if(json.exist("/payload/ID")){
+                                json.get<uint32_t>("/payload/ID", ID); 
+                            } else {
+                                tmp = false;
+                            }
+                            
+                            if(json.exist("/payload/RequestAck")){
+                                json.get<uint8_t>("/payload/RequestAck", RequestAck); 
+                            } else {
+                                tmp = false;
+                            }
+                            if(tmp){
+                                receiveRequestAckMsg(m_header, ID, RequestAck);}
+                            break; }
+		     
+                        case 5: {
+                            uint32_t ID;
+                            std::string PayloadMsg;
+                                        
+                            bool tmp = true;
+                            
+                            if(json.exist("/payload/ID")){
+                                json.get<uint32_t>("/payload/ID", ID); 
+                            } else {
+                                tmp = false;}
+                            
+                            if(json.exist("/payload/PayloadMsg")){
+                                json.get<std::string>("/payload/PayloadMsg", PayloadMsg); 
+                            } else {
+                                tmp = false;}
+                            
+                                        
+                            if(tmp){
+                                receiveBackMsg(m_header, ID, PayloadMsg);}
+                            break; 
+                        }
+                    }
+                }
+            }catch(...){
+                return;
+            }
+        }
+       
+        void IPCInterface::send(std::shared_ptr<flexd::icl::ipc::FleXdIPCMsg> Msg, uint32_t peerID) {
+            if(sendMsg(Msg, peerID)) {
+                m_counter++;
             }
         }
     } //namespace bus

@@ -6,6 +6,7 @@ message(STATUS "***" )
 message(STATUS "* " ${PROJECT_NAME})
 message(STATUS "***")
 
+include(GNUInstallDirs)
 include(FindPkgConfig)
 find_package(PkgConfig REQUIRED)
 pkg_search_module(JSON_PARSER REQUIRED jsonParser)
@@ -32,17 +33,22 @@ set(publicHeaders
 
 set(privateHeaders
     inc/IPCInterface.h
+    inc/GenericClient.h
 )
 
 set(privateSources
     src/IPCInterface.cpp
+    src/GenericClient.cpp
 )
 
 add_library(${PROJECT_NAME} SHARED ${privateSources})
-    
+set_target_properties(${PROJECT_NAME} PROPERTIES
+    VERSION ${PROJECT_VERSION}
+    SOVERSION 1
+    PUBLIC_HEADER "${publicHeaders}")    
 configure_file(${PROJECT_NAME}.pc.in ${PROJECT_NAME}.pc @ONLY)
 
-target_include_directories(${PROJECT_NAME} PUBLIC inc/public ${JSON_PARSER_INCLUDE_DIRS})
+target_include_directories(${PROJECT_NAME} PUBLIC inc ${JSON_PARSER_INCLUDE_DIRS})
 target_include_directories(${PROJECT_NAME} PRIVATE inc/
     ${FLEXDIPCCONNECTOR_INCLUDE_DIRS}
     ${FLEXDEPOLL_INCLUDE_DIRS}
@@ -60,8 +66,8 @@ target_link_libraries(${PROJECT_NAME}
     ${FLEXDLOGGERCLIENT_LIBRARIES}
 )
 
-install(FILES ${CMAKE_BINARY_DIR}/libs/flexdSimIPC/${PROJECT_NAME}.pc
-    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pkgconfig) 
+install(FILES ${CMAKE_BINARY_DIR}/${PROJECT_NAME}.pc
+    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pkgconfig)
     
 SET(flexdSimIPCPublicInc "${flexdSimIPC_SOURCE_DIR}/inc/" CACHE STRING "")
 SET(flexdSimIPCPrivateInc "${flexdSimIPC_SOURCE_DIR}/inc" CACHE STRING "")

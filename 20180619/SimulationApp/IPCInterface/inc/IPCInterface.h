@@ -35,28 +35,18 @@
 #include <FleXdEpoll.h>
 #include <FleXdIPCMsg.h>
 #include "FleXdIPCConnector.h"
-
-
-#define MCM_JSON_MSG_TYPE "/msgType"
-#define MCM_JSON_MSG_COUNTER "/msgCounter"
-#define MCM_JSON_PAYLOAD_CRC "/payloadCRC"
-#define MCM_JSON_TIME_STAMP "/timeStamp"
-#define MCM_JSON_FROM "/from"
-#define MCM_JSON_TO "/to"
-#define MCM_JSON_PAYLOAD "/payload"
+#include "GenericClient.h"
+#include "JsonObj.h"
+#include <memory>
+#include <cstdint>
 
 namespace flexd{
-    namespace bus{
+    namespace gen{
 
-        class IPCInterface : public flexd::icl::ipc::IPCConnector{
+        class IPCInterface : public flexd::icl::ipc::IPCConnector, public flexd::gen::GenericClient {
         public:
             IPCInterface(uint32_t ipdID, flexd::icl::ipc::FleXdEpoll& poller);
             virtual ~IPCInterface() = default;
-            /**
-             * Override function from base class IPCConnector, that returned received message as a parameter of function.
-             * @param msg - received message from IPC
-             */
-            void receiveMsg ( flexd::icl::ipc::pSharedFleXdIPCMsg msg ) override;
             /**
              * Override function from base class IPCConnector, that is called after peer connecting 
              * @param peerID - identifier of connected peer
@@ -76,7 +66,7 @@ namespace flexd{
              * @param QOS - 
              * @param KeepAlive - 
              */
-            void sendCreateClientMsg ( uint32_t ID, const std::string& ExternID, const std::string& Requester, const std::string& IPAddress, const std::string& Topic, uint8_t Direction, bool CleanSession, int Port, int QOS, int KeepAlive );
+            void sendCreateClientMsg ( std::shared_ptr<GenericClient::Header> header, uint32_t ID, const std::string& ExternID, const std::string& Requester, const std::string& IPAddress, const std::string& Topic, uint8_t Direction, bool CleanSession, int Port, int QOS, int KeepAlive );
              /**
              * Function for publishing message ti the MCM
              * @param ID - identifier of connected peer
@@ -84,22 +74,20 @@ namespace flexd{
              * @param Requester -
              * @param PayloadMsg -
              */
-            void sendPublishMsg ( uint32_t ID, const std::string& Topic, const std::string& Requester, const std::string& PayloadMsg );
-            /**
-             * Function implement the send  function from base class. 
-             * @param msg - sent message to the IPC
-             */
-            void send ( std::shared_ptr<flexd::icl::ipc::FleXdIPCMsg> msg );
+            void sendPublishMsg (std::shared_ptr<GenericClient::Header> header, uint32_t ID, const std::string& Topic, const std::string& Requester, const std::string& PayloadMsg );
+            
+            
             /**
              * Pure virtual function for timer, the override function will be called after the timer overflows
              */
             virtual void onTimer() = 0;
+            void sendOperationMsg(std::shared_ptr<GenericClient::Header> header,uint32_t ID, const std::string& Requester, uint8_t Operation);
         private:
-            uint32_t getTimestamp();
-            std::shared_ptr<flexd::icl::ipc::FleXdIPCMsg> msgWrap(const std::string& payload);
-            std::string msgUnwrap(const std::shared_ptr<flexd::icl::ipc::FleXdIPCMsg>& msg);
-        private:
-            uint8_t m_counter;
+            void send ( std::shared_ptr<flexd::icl::ipc::FleXdIPCMsg> msg, uint32_t peerID );
+            
+            virtual void receiveMsg(flexd::icl::ipc::pSharedFleXdIPCMsg Msg) override;
+            virtual void receiveRequestAckMsg(std::shared_ptr<GenericClient::Header> header, uint32_t ID, uint8_t RequestAck) = 0;
+            virtual void receiveBackMsg(std::shared_ptr<GenericClient::Header> header, uint32_t ID, const std::string& PayloadMsg) = 0;
         };
 
     } //namespace bus
