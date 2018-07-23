@@ -35,36 +35,84 @@
  #include "FleXdEpoll.h"
  #include <JsonObj.h>
  //#include "FleXdTimer.h"
- //#include <ctime>
+ #include <unistd.h>
  #include <iostream>
  
  namespace flexd {
      namespace bus {
         class Monitor: public flexd::gen::IPCInterface{
         public:
+            int m_counter = 0;
+            
             Monitor(flexd::icl::ipc::FleXdEpoll& poller)
             :IPCInterface(00110, poller)
             {   
                 
                 FLEX_LOG_INIT(poller,"Monitor");
-                flexd::gen::GenericClient::Header head = {0,0,0,0, getMyID(), 00000};
-                auto header = std::make_shared<flexd::gen::GenericClient::Header>(head);
-                sendCreateClientMsg(header, getMyID(),"Monitor","Monitor","127.0.0.1", "backend/in", 2, true, 1883, 0, 60);
-                sendOperationMsg(header, getMyID(), "Monitor", 0);
+                
                 FLEX_LOG_INFO(" -> Monitor initialization!");
                 std::cout <<"Terminal:"<< std::endl;
             }
             
             ~Monitor(){};
             
-            void receiveRequestAckMsg(std::shared_ptr<flexd::gen::GenericClient::Header> header, uint32_t ID, uint8_t RequestAck) override{
-                
+            void createClient(){
+                FLEX_LOG_DEBUG("Send Request for Create Client");
+                std::shared_ptr<GenericClient::Header> header = std::make_shared<GenericClient::Header>();
+                header->from = getMyID();
+                header->to = 00000;
+                sendCreateClientMsg(std::move(header), getMyID(), "Monitor", "Monitor", "127.0.0.1", "backend/in", 2, true, 1883, 0, 60);
             }
+            
+            void sendSubscribe()
+            {
+                FLEX_LOG_DEBUG("Send Subscribe");
+                std::shared_ptr<GenericClient::Header> header = std::make_shared<GenericClient::Header>();
+                header->from = getMyID();
+                header->to = 00000;
+                sendOperationMsg(std::move(header), getMyID(), "Monitor", 0);
+            }
+            
+            void receiveRequestAckMsg(std::shared_ptr<flexd::gen::GenericClient::Header> header, uint32_t ID, uint8_t RequestAck) override{
+                std::cout << "Receive Ack: " << ID << " -> " << (int)RequestAck << std::endl;
+                std::shared_ptr<GenericClient::Header> sendheader = std::make_shared<GenericClient::Header>();
+                sendheader->from = getMyID();
+                sendheader->to = 00000;
+                if(m_counter == 0 && RequestAck == 1) {
+                    sleep(2);
+                    FLEX_LOG_DEBUG("Create CLient Success: ", ID);
+                    sendSubscribe();
+                    m_counter++;
+                } else if (m_counter == 0 && RequestAck == 0) {
+                    sleep(5);
+                    FLEX_LOG_DEBUG("Create CLient Fail: ", ID);
+                    createClient();
+                } else if (m_counter == 0 && RequestAck == 2) {
+                    FLEX_LOG_DEBUG("Create CLient Fail, because is exists: ", ID);
+                    sendSubscribe();
+                    m_counter++;
+                } else if(m_counter == 1 && RequestAck == 1) {
+                    FLEX_LOG_DEBUG("Client Subscribe Success: ", ID);
+                    m_counter++;
+                }else if(m_counter == 1 && RequestAck == 0) {
+                    sleep(5);
+                    FLEX_LOG_DEBUG("Client Subscribe Fail: ", ID);
+                    sendSubscribe();
+                } else {
+                    FLEX_LOG_DEBUG("Publish MSG to backend Success: ", ID);
+                }
+            }
+            
+            
             void receiveBackMsg(std::shared_ptr<flexd::gen::GenericClient::Header> header, uint32_t ID, const std::string& PayloadMsg) override{
                 std::cout << ID << " -> " << PayloadMsg << std::endl;
             }
+            
+            void onConnectPeer(uint32_t peerID, bool genericPeer) {
+                createClient();
+            }
             void onTimer() override {};
-        private:
+            
         };
 
     } //namespace bus

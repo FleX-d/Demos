@@ -96,12 +96,10 @@ namespace flexd{
             send(msgWrap(header, json.getJson()), header->to);
         }
         
-        void IPCInterface::onConnectPeer(uint32_t peerID, bool genericPeer){
-
-        }
         
         void IPCInterface::receiveMsg(flexd::icl::ipc::pSharedFleXdIPCMsg msg)
         {
+            std::cout << "RECEIVE MSG!!!!!!!!!!" << std::endl;
             try{
                 if(!msg) {
                     return;

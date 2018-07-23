@@ -82,7 +82,9 @@
                 
             }
             
-            
+            void onConnectPeer(uint32_t peerID, bool genericPeer) {
+                
+            }
         private:
             uint16_t m_periodTime;
             flexd::icl::ipc::FleXdTimer m_GPIOTimer;    

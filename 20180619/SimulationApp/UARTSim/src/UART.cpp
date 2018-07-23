@@ -78,6 +78,10 @@ namespace flexd{
             void receiveBackMsg(std::shared_ptr<flexd::gen::GenericClient::Header> header, uint32_t ID, const std::string& PayloadMsg) override{
                 
             }
+            
+            void onConnectPeer(uint32_t peerID, bool genericPeer) {
+               
+        }
 
         private:
             uint16_t m_periodTime;

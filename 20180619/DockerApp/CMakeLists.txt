@@ -47,11 +47,13 @@ endif (FLEXD_INIPARSER_FOUND)
 SET(privateHeaders
     inc/IPCClient.h
     inc/IPCInterface.h
+    inc/GenericClient.h
 )
 
 SET(privateSources
     src/IPCClient.cpp
     src/IPCInterface.cpp
+    src/GenericClient.cpp
     src/main.cpp
 )
 

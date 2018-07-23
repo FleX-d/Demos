@@ -52,7 +52,7 @@ namespace flexd{
              * @param peerID - identifier of connected peer
              * @param genericPeer - generic interface setting (true - generic interface enable)
              */
-            void onConnectPeer ( uint32_t peerID, bool genericPeer ) override;
+            void onConnectPeer ( uint32_t peerID, bool genericPeer ) = 0;
              /**
              * Function for initialization the client on the Mosquito Communication Manager (PeerID = 00000)
              * @param ID - identifier of connected peer
