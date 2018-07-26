@@ -25,5 +25,6 @@ int main(int argc, char** argv)
     if(e.init()) {
         poller.loop();
     }
+    FLEX_LOG_UNINIT();
     return 0;
 }

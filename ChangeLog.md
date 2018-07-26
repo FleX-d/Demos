@@ -2,6 +2,16 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
+## [0.0.1] - 2018-07-27
+### Added
+- None
+
+### Changed
+- Implementation of FLEX_LOG_UNINIT macro [Martin Strenger]
+
+### Removed
+- None
+
 ## [0.0.1] - 2018-06-25
 ### Added
 - None

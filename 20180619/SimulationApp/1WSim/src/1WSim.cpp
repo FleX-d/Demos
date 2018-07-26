@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2018, Globallogic s.r.o.
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *  * Redistributions of source code must retain the above copyright
@@ -12,7 +12,7 @@
  *  * Neither the name of the Globallogic s.r.o. nor the
  *       names of its contributors may be used to endorse or promote products
  *       derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -24,13 +24,13 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
- 
+
 /*
  * File:   1WSim.cpp
  * Author: Jakub Pekar
  */
- 
- 
+
+
  #include "FleXdLogger.h"
  #include "IPCInterface.h"
  #include "GenericClient.h"
@@ -38,13 +38,13 @@
  #include "FleXdTimer.h"
  #include <ctime>
  #include <iostream>
- 
+
 namespace flexd{
-    namespace bus{ 
+    namespace bus{
         class OneWSim: public flexd::gen::IPCInterface{
         public:
-            
-    
+
+
             OneWSim(flexd::icl::ipc::FleXdEpoll& poller)
             :IPCInterface(00101, poller),
             m_periodTime(8),
@@ -61,35 +61,37 @@ namespace flexd{
                 auto header = std::make_shared<flexd::gen::GenericClient::Header>(head);
                 sendCreateClientMsg(header,00101,"OneW","OneWired","127.0.0.1", "backend/in", 2, true, 1883, 0, 60);
             }
-            
-            ~OneWSim(){}
-            
+
+            ~OneWSim(){
+                FLEX_LOG_UNINIT();
+            }
+
             void onTimer() override{
                 srand(time(NULL));
                 int number = std::rand();
-                std::string message = "Data from One Wired: Voltage = " + std::to_string(number % 6) + "." +std::to_string(number % 10); 
+                std::string message = "Data from One Wired: Voltage = " + std::to_string(number % 6) + "." +std::to_string(number % 10);
                 std::vector<uint8_t> data(message.begin(),message.end());
                 FLEX_LOG_TRACE("-> Sending data to MCM: ", message );
-                
+
                 flexd::gen::GenericClient::Header head = {0,0,0,0, getMyID(), 00000};
                 auto header = std::make_shared<flexd::gen::GenericClient::Header>(head);
-                
+
                 sendPublishMsg(header,00101,"backend/in","OneWired",message);
             }
             void receiveRequestAckMsg(std::shared_ptr<flexd::gen::GenericClient::Header> header, uint32_t ID, uint8_t RequestAck) override{
-                
+
             }
             void receiveBackMsg(std::shared_ptr<flexd::gen::GenericClient::Header> header, uint32_t ID, const std::string& PayloadMsg) override{
-                
+
             }
-            
+
             void onConnectPeer(uint32_t peerID, bool genericPeer) {
-           
+
             }
 
         private:
             uint16_t m_periodTime;
-            flexd::icl::ipc::FleXdTimer m_OneWTimer;    
+            flexd::icl::ipc::FleXdTimer m_OneWTimer;
         };
 
     } //namespace bus

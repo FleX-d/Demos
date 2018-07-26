@@ -22,13 +22,13 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
- 
+
  /*
  * File:   GPIOSim.cpp
  * Author: Jakub Pekar
  */
- 
- 
+
+
  #include "FleXdLogger.h"
  #include "IPCInterface.h"
  #include "GenericClient.h"
@@ -36,12 +36,12 @@
  #include "FleXdTimer.h"
  #include <ctime>
  #include <iostream>
- 
+
  namespace flexd{
-    namespace bus{ 
+    namespace bus{
         class GPIOSim: public flexd::gen::IPCInterface{
         public:
-            
+
             GPIOSim(flexd::icl::ipc::FleXdEpoll& poller)
             :IPCInterface(00102, poller),
             m_periodTime(18),
@@ -58,36 +58,38 @@
                 auto header = std::make_shared<flexd::gen::GenericClient::Header>(head);
                 sendCreateClientMsg(header, 00102, "GPIO", "GPIOSim", "127.0.0.1", "backend/in/", 2, true, 1883, 0, 60);
             }
-            
-            ~GPIOSim(){}
-            
-            
+
+            ~GPIOSim(){
+                FLEX_LOG_UNINIT();
+            }
+
+
             void onTimer() override{
                 srand(time(NULL));
                 int number = std::rand() % 2;
-                std::string message = "Data from GPIO: PinState = " + std::to_string(number); 
+                std::string message = "Data from GPIO: PinState = " + std::to_string(number);
                 std::vector<uint8_t> data(message.begin(),message.end());
                 FLEX_LOG_TRACE(" -> Sending data to MCM: ", message );
-                
+
                 flexd::gen::GenericClient::Header head = {0,0,0,0, getMyID(), 00000};
                 auto header = std::make_shared<flexd::gen::GenericClient::Header>(head);
-                
+
                 sendPublishMsg(header,00102,"backend/in","GPIOSim",message);
             }
-            
+
             void receiveRequestAckMsg(std::shared_ptr<flexd::gen::GenericClient::Header> header, uint32_t ID, uint8_t RequestAck) override{
-                        
+
             }
             void receiveBackMsg(std::shared_ptr<flexd::gen::GenericClient::Header> header, uint32_t ID, const std::string& PayloadMsg) override{
-                
+
             }
-            
+
             void onConnectPeer(uint32_t peerID, bool genericPeer) {
-                
+
             }
         private:
             uint16_t m_periodTime;
-            flexd::icl::ipc::FleXdTimer m_GPIOTimer;    
+            flexd::icl::ipc::FleXdTimer m_GPIOTimer;
         };
     } //namespace bus
 } //namespace flexd
