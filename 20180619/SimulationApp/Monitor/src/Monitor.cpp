@@ -57,7 +57,7 @@
             ~Monitor(){};
             
             void createClient(){
-                FLEX_LOG_DEBUG("Send Request for Create Client");
+                //FLEX_LOG_DEBUG("Send Request for Create Client");
                 std::shared_ptr<GenericClient::Header> header = std::make_shared<GenericClient::Header>();
                 header->from = getMyID();
                 header->to = 00000;
@@ -66,7 +66,7 @@
             
             void sendSubscribe()
             {
-                FLEX_LOG_DEBUG("Send Subscribe");
+                //FLEX_LOG_DEBUG("Send Subscribe");
                 std::shared_ptr<GenericClient::Header> header = std::make_shared<GenericClient::Header>();
                 header->from = getMyID();
                 header->to = 00000;
@@ -80,7 +80,7 @@
                 sendheader->to = 00000;
                 if(m_counter == 0 && RequestAck == 1) {
                     sleep(2);
-                    FLEX_LOG_DEBUG("Create CLient Success: ", ID);
+                  //  FLEX_LOG_DEBUG("Create CLient Success: ", ID);
                     sendSubscribe();
                     m_counter++;
                 } else if (m_counter == 0 && RequestAck == 0) {
@@ -99,7 +99,7 @@
                     FLEX_LOG_DEBUG("Client Subscribe Fail: ", ID);
                     sendSubscribe();
                 } else {
-                    FLEX_LOG_DEBUG("Publish MSG to backend Success: ", ID);
+                   FLEX_LOG_DEBUG("Publish MSG to backend Success: ", ID);
                 }
             }
             

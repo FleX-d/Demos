@@ -44,12 +44,12 @@ namespace flexd{
             m_periodTime(5),
             m_UARTTimer(poller, m_periodTime, 0, true, [this](void){ this->onTimer(); })
             {   
-                FLEX_LOG_INIT(poller,"UARTSimulator");
+              FLEX_LOG_INIT(poller,"UARTSimulator");
                 
 
                 if(m_UARTTimer.start())
                 {
-                    FLEX_LOG_INFO("-> FleXdTimer.start() successful");
+                  FLEX_LOG_INFO("-> FleXdTimer.start() successful");
                 } else {
                     FLEX_LOG_INFO("-> FleXdTimer.start() failed");
                 }
@@ -67,7 +67,7 @@ namespace flexd{
                 std::string message = "Data from UART: temperature = " + std::to_string(number) + "°C"; 
                 std::vector<uint8_t> data(message.begin(),message.end());
     
-                FLEX_LOG_TRACE("-> Sending data to MCM: ", message );
+              FLEX_LOG_TRACE("-> Sending data to MCM: ", message );
                 flexd::gen::GenericClient::Header head = {0,0,0,0, getMyID(), 00000};
                 auto header = std::make_shared<flexd::gen::GenericClient::Header>(head);
                 sendPublishMsg(header, getMyID(), "backend/in", "UARTSim", message);

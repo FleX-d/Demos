@@ -2,17 +2,27 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
+
+## [0.0.1] - 2018-08-07
+### Added
+- fleXd1Wired application that read temperature from 1-Wired interface (sensor - MAX31820) [Jakub Pekar]
+
+### Changed
+- Editing main cmake [Jakub Pekar]
+
+### Removed
+- None
+
 ## [0.0.1] - 2018-06-25
 ### Added
 - None
 
 ### Changed
-- Finishing with implementation of generic interface[Jakub Pekar]
+- Finishing with implementation of generic interface [Jakub Pekar]
 
 ### Removed
 - Empty directories /inc [Jakub Pekar]
 
-## [Unreleased]
 ## [0.0.1] - 2018-06-21
 ### Added
 - None
