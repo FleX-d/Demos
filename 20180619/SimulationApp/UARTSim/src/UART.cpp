@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2018, Globallogic s.r.o.
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *  * Redistributions of source code must retain the above copyright
@@ -12,7 +12,7 @@
  *  * Neither the name of the Globallogic s.r.o. nor the
  *       names of its contributors may be used to endorse or promote products
  *       derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -36,16 +36,15 @@
 #include "FleXdLogger.h"
 
 namespace flexd{
-    namespace bus{ 
+    namespace bus{
         class UARTSim : public flexd::gen::IPCInterface{
         public:
-            UARTSim(flexd::icl::ipc::FleXdEpoll& poller) 
+            UARTSim(flexd::icl::ipc::FleXdEpoll& poller)
             :IPCInterface(00100, poller),
             m_periodTime(5),
             m_UARTTimer(poller, m_periodTime, 0, true, [this](void){ this->onTimer(); })
-            {   
-              FLEX_LOG_INIT(poller,"UARTSimulator");
-                
+            {
+                FLEX_LOG_INIT(poller,"UARTSimulator");
 
                 if(m_UARTTimer.start())
                 {
@@ -57,30 +56,33 @@ namespace flexd{
                 auto header = std::make_shared<flexd::gen::GenericClient::Header>(head);
                 sendCreateClientMsg(header, 00100,"UART","UARTSim","127.0.0.1", "backend/in", 2, true, 1883, 0, 60);
             }
-            ~UARTSim(){ m_UARTTimer.stop(); }
+            ~UARTSim(){
+                m_UARTTimer.stop();
+                FLEX_LOG_UNINIT();
+            }
             UARTSim(const UARTSim&) = delete;
-    
+
             void onTimer() override{
-        
+
                 srand(time(NULL));
                 int number = std::rand() % 35;
-                std::string message = "Data from UART: temperature = " + std::to_string(number) + "°C"; 
+                std::string message = "Data from UART: temperature = " + std::to_string(number) + "°C";
                 std::vector<uint8_t> data(message.begin(),message.end());
-    
-              FLEX_LOG_TRACE("-> Sending data to MCM: ", message );
+
+                FLEX_LOG_TRACE("-> Sending data to MCM: ", message );
                 flexd::gen::GenericClient::Header head = {0,0,0,0, getMyID(), 00000};
                 auto header = std::make_shared<flexd::gen::GenericClient::Header>(head);
                 sendPublishMsg(header, getMyID(), "backend/in", "UARTSim", message);
             }
             void receiveRequestAckMsg(std::shared_ptr<flexd::gen::GenericClient::Header> header, uint32_t ID, uint8_t RequestAck) override{
-                
+
             }
             void receiveBackMsg(std::shared_ptr<flexd::gen::GenericClient::Header> header, uint32_t ID, const std::string& PayloadMsg) override{
-                
+
             }
-            
+
             void onConnectPeer(uint32_t peerID, bool genericPeer) {
-               
+
         }
 
         private:

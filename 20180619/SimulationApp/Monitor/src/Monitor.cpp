@@ -22,13 +22,13 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
- 
+
  /*
  * File:   monitor.cpp
  * Author: Jakub Pekar
  */
- 
- 
+
+
  #include "FleXdLogger.h"
  #include "IPCInterface.h"
  #include "GenericClient.h"
@@ -37,25 +37,27 @@
  //#include "FleXdTimer.h"
  #include <unistd.h>
  #include <iostream>
- 
+
  namespace flexd {
      namespace bus {
         class Monitor: public flexd::gen::IPCInterface{
         public:
             int m_counter = 0;
-            
+
             Monitor(flexd::icl::ipc::FleXdEpoll& poller)
             :IPCInterface(00110, poller)
-            {   
-                
+            {
+
                 FLEX_LOG_INIT(poller,"Monitor");
-                
+
                 FLEX_LOG_INFO(" -> Monitor initialization!");
                 std::cout <<"Terminal:"<< std::endl;
             }
-            
-            ~Monitor(){};
-            
+
+            ~Monitor(){
+                FLEX_LOG_UNINIT();
+            };
+
             void createClient(){
                 //FLEX_LOG_DEBUG("Send Request for Create Client");
                 std::shared_ptr<GenericClient::Header> header = std::make_shared<GenericClient::Header>();
@@ -63,7 +65,7 @@
                 header->to = 00000;
                 sendCreateClientMsg(std::move(header), getMyID(), "Monitor", "Monitor", "127.0.0.1", "backend/in", 2, true, 1883, 0, 60);
             }
-            
+
             void sendSubscribe()
             {
                 //FLEX_LOG_DEBUG("Send Subscribe");
@@ -72,7 +74,7 @@
                 header->to = 00000;
                 sendOperationMsg(std::move(header), getMyID(), "Monitor", 0);
             }
-            
+
             void receiveRequestAckMsg(std::shared_ptr<flexd::gen::GenericClient::Header> header, uint32_t ID, uint8_t RequestAck) override{
                 std::cout << "Receive Ack: " << ID << " -> " << (int)RequestAck << std::endl;
                 std::shared_ptr<GenericClient::Header> sendheader = std::make_shared<GenericClient::Header>();
@@ -102,21 +104,21 @@
                    FLEX_LOG_DEBUG("Publish MSG to backend Success: ", ID);
                 }
             }
-            
-            
+
+
             void receiveBackMsg(std::shared_ptr<flexd::gen::GenericClient::Header> header, uint32_t ID, const std::string& PayloadMsg) override{
                 std::cout << ID << " -> " << PayloadMsg << std::endl;
             }
-            
+
             void onConnectPeer(uint32_t peerID, bool genericPeer) {
                 createClient();
             }
             void onTimer() override {};
-            
+
         };
 
     } //namespace bus
- } //namespace flexd         
+ } //namespace flexd
 
 int main(int argc, char** argv) {
     flexd::icl::ipc::FleXdEpoll poller(10);
